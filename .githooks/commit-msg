@@ -1,0 +1,31 @@
+#!/bin/sh
+set -eu
+
+message_file="$1"
+subject="$(sed -n '1p' "$message_file")"
+
+case "$subject" in
+  Merge\ *|Revert\ *)
+    exit 0
+    ;;
+esac
+
+pattern='^(feat|fix|docs|test|refactor|style|build|ci|chore|perf|revert)(\([a-z0-9._-]+\))?!?: [a-z0-9].{0,71}$'
+
+if ! printf '%s\n' "$subject" | grep -Eq "$pattern"; then
+  cat >&2 <<'EOF'
+Invalid commit message.
+
+Use Conventional Commits:
+  type(scope): short imperative summary
+
+Allowed types:
+  feat, fix, docs, test, refactor, style, build, ci, chore, perf, revert
+
+Examples:
+  docs: add versioning protocol
+  feat(tokens): add tokenizer scaffold
+  fix(parser): handle empty input
+EOF
+  exit 1
+fi

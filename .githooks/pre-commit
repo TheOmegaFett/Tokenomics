@@ -1,0 +1,28 @@
+#!/bin/sh
+set -eu
+
+if [ "${SKIP_CHANGELOG_CHECK:-}" = "1" ]; then
+  exit 0
+fi
+
+changed_files="$(git diff --cached --name-only --diff-filter=ACMR)"
+
+if [ -z "$changed_files" ]; then
+  exit 0
+fi
+
+non_changelog_files="$(printf '%s\n' "$changed_files" | grep -v '^CHANGELOG\.md$' || true)"
+
+if [ -z "$non_changelog_files" ]; then
+  exit 0
+fi
+
+if ! printf '%s\n' "$changed_files" | grep -q '^CHANGELOG\.md$'; then
+  cat >&2 <<'EOF'
+CHANGELOG.md must be updated with user-visible, release-relevant, or policy changes.
+
+Stage a changelog entry, or bypass only for internal-only cleanup:
+  SKIP_CHANGELOG_CHECK=1 git commit -m "chore: ..."
+EOF
+  exit 1
+fi

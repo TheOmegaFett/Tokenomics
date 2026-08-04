@@ -27,7 +27,7 @@ Add tests with new behavior. Keep unit tests close to the code they exercise or 
 
 ## Commit & Pull Request Guidelines
 
-This repository has no established Git history yet. Use short, imperative commit subjects such as `Add token parser` or `Document setup commands`. Keep each commit focused on one logical change.
+Use the protocol in `VERSIONING.md`. Commit after one focused, working change and write Conventional Commit subjects such as `docs: update setup notes`, `feat(tokens): add parser scaffold`, or `fix(parser): handle empty input`. Update `CHANGELOG.md` for user-visible, release-relevant, or repository-policy changes. Enable local commit-message checks with `git config core.hooksPath .githooks`.
 
 Pull requests should include a concise summary, testing performed, linked issues when applicable, and screenshots for user-facing visual changes. Note any follow-up work or known limitations explicitly.
 
