@@ -9,6 +9,8 @@ dist/
 build/
 coverage/
 .pytest_cache/
+test-results/
+playwright-report/
 
 # Environment and local configuration
 .env

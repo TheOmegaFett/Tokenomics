@@ -8,6 +8,7 @@ This project follows Semantic Versioning. Dates use `YYYY-MM-DD`.
 
 ### Added
 
+- Complete local-first Tokenomics Lab web application with simulator, compare, stress lab, model inspector, worker-backed sweeps, presets, exports, and simulation-engine tests.
 - Repository versioning protocol and local commit-message enforcement.
 - Changelog policy for documenting notable changes before release.
 
