@@ -12,6 +12,10 @@ This project follows Semantic Versioning. Dates use `YYYY-MM-DD`.
 - Repository versioning protocol and local commit-message enforcement.
 - Changelog policy for documenting notable changes before release.
 
+### Changed
+
+- Refined diagnostics so permanently fixed full issuance is not treated as supply-cap exhaustion and stable zero-growth systems are not labeled healthy growth without a positive growth signal.
+
 ## [0.1.0] - 2026-08-05
 
 ### Added

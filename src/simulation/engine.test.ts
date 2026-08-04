@@ -143,6 +143,32 @@ describe('simulation engine', () => {
     }
   });
 
+  it('does not flag supply-cap exhaustion for permanently fixed full issuance', () => {
+    const result = runSimulation(scenario({
+      maximumSupply: 400000,
+      mintingPolicy: 'none',
+      cycleMintCap: 0,
+      fixedEmission: 0,
+      burnReplacementRatio: 0,
+      burnShare: 0,
+    }));
+    const labels = result.metrics.at(-1)?.diagnoses.map((d) => d.label) ?? [];
+    expect(labels).not.toContain('Supply-cap exhaustion');
+  });
+
+  it('does not call a stable zero-growth system healthy growth', () => {
+    const result = runSimulation(scenario({
+      fixedNewUsersPerCycle: 0,
+      percentageGrowthPerCycle: 0,
+      reactivationRate: 0,
+      mintingPolicy: 'none',
+      burnShare: 0,
+      serviceQuality: 0.9,
+    }));
+    const labels = result.metrics.at(-1)?.diagnoses.map((d) => d.label) ?? [];
+    expect(labels).not.toContain('Healthy growth');
+  });
+
   it('same shock schedule is reproducible', () => {
     const shocks = [{ id: 's', type: 'validatorOutage' as const, startCycle: 10, duration: 5, magnitude: 0.5, gradualRecovery: false }];
     expect(runSimulation(scenario({ seed: 44 }, shocks)).metrics).toEqual(runSimulation(scenario({ seed: 44 }, shocks)).metrics);

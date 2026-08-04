@@ -24,8 +24,23 @@ export function healthScore(c: HealthComponents): number {
 export function diagnoses(p: SimulationParams, state: TokenState, m: CycleMetrics): Diagnosis[] {
   const d: Diagnosis[] = [];
   const add = (label: string, severity: Diagnosis['severity'], reason: string) => d.push({ label, severity, reason });
+  const ppChange = m.realUtilityYield - m.nominalStakingYield;
+  const utilityThroughputGrowing = (m.components.serviceOutputEffect ?? 0) > 0.02;
+  const treasuryGrowing = m.treasuryIncome > m.treasuryExpenditure;
+  const userBaseGrowing = m.newUsers > m.churnedUsers;
+  const purchasingPowerGrowing = ppChange > 0.002;
+  const futureIssuanceEnabled =
+    p.mintingPolicy !== 'none' &&
+    p.cycleMintCap > 0 &&
+    (p.fixedEmission > 0 ||
+      p.burnReplacementRatio > 0 ||
+      p.targetNominalStakingYield > 0 ||
+      p.utilityGrowthIssuanceMultiplier > 0 ||
+      p.treasuryRescueMint > 0);
   if (m.economyHealthScore >= 78 && m.serviceFulfilmentRatio > 0.85 && m.validatorSafetyRatio >= 1.5) add('Sustainable equilibrium', 'ok', 'Health, validator coverage, and service fulfilment are all strong.');
-  if (m.activeUsers > p.initialUsers * 0.8 && m.utilityValueIndex >= 0.95 && m.economyHealthScore >= 70) add('Healthy growth', 'ok', 'Active usage remains high while utility value is stable.');
+  if (m.activeUsers > p.initialUsers * 0.8 && m.utilityValueIndex >= 0.95 && m.economyHealthScore >= 70 && (userBaseGrowing || utilityThroughputGrowing || treasuryGrowing || purchasingPowerGrowing)) {
+    add('Healthy growth', 'ok', 'A core growth signal is positive while utility value and health remain strong.');
+  }
   if (state.treasury < p.treasuryMinimumReserve || m.treasuryRunway < 8) add('Treasury depletion', 'critical', `Treasury runway is ${m.treasuryRunway.toFixed(1)} cycles and reserve is ${state.treasury.toFixed(0)}.`);
   if (m.validatorRewards < p.validatorOperatingCost || m.validators < p.minimumSafeValidators) add('Validator starvation', 'critical', 'Validator rewards or validator count are below safe operating thresholds.');
   if (m.validators < p.targetValidators * 0.45 || p.requiredValidatorStake * m.validators > state.staked * 0.9) add('Validator centralization', 'warning', 'Validator participation is concentrated relative to target security.');
@@ -40,7 +55,9 @@ export function diagnoses(p: SimulationParams, state: TokenState, m: CycleMetric
   if (m.serviceFulfilmentRatio < 0.55) add('Utility-capacity shortage', 'warning', 'Completed service units are far below requested service units.');
   if (m.completedServiceUnits < p.initialUsers * 0.15 && m.utilityValueIndex < 0.8) add('Low-utility stagnation', 'warning', 'Real service output and utility index are both weak.');
   if (m.topHolderShare > 0.3 || m.giniEstimate > 0.7) add('Whale concentration', 'warning', 'Top-holder share or Gini estimate indicate concentrated ownership.');
-  if (state.maximumSupply - state.issuedSupply < state.maximumSupply * 0.02) add('Supply-cap exhaustion', 'warning', 'Unissued capacity is below 2% of maximum supply.');
+  if (futureIssuanceEnabled && state.maximumSupply - state.issuedSupply < state.maximumSupply * 0.02) {
+    add('Supply-cap exhaustion', 'warning', 'Issuance remains enabled while unissued capacity is below 2% of maximum supply.');
+  }
   if (m.netSupplyChange > 0 && m.purchasingPower < 0.9) add('Reward dilution', 'warning', 'New token rewards are coinciding with weaker utility purchasing power.');
   if (d.length === 0) add('Sustainable equilibrium', 'ok', 'No critical imbalance crossed a diagnosis threshold.');
   return d;
