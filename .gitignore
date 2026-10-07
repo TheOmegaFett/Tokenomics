@@ -11,11 +11,18 @@ coverage/
 .pytest_cache/
 test-results/
 playwright-report/
+*.tsbuildinfo
+.cache/
+.vite/
 
 # Environment and local configuration
 .env
 .env.*
 !.env.example
+.npmrc
+/.agents/
+/.aws/
+/.codex/
 
 # Logs
 *.log
@@ -28,3 +35,5 @@ yarn-error.log*
 Thumbs.db
 .idea/
 .vscode/
+*.swp
+*~

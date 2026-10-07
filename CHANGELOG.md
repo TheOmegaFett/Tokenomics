@@ -23,6 +23,7 @@ This project follows Semantic Versioning. Dates use `YYYY-MM-DD`.
 
 ### Changed
 
+- Expanded Git ignore rules for local tooling, credentials, caches, and editor swap files.
 - Documented the project, workspaces, commands, model, and deployment in the README.
 - Updated test tooling and dependency lockfile to resolve reported advisories.
 - Split chart dependencies into a separate build chunk for browser caching.
