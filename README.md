@@ -1,60 +1,79 @@
 # Tokenomics Lab
 
-Tokenomics Lab is a local-first simulation game for designing and stress-testing fictional token economies before creating a real token. It is not a fiat-backed system, investment platform, exchange, wallet, blockchain node, or live financial application. It never connects to real markets and does not predict actual returns.
+[![Test and deploy Pages](https://github.com/TheOmegaFett/Tokenomics/actions/workflows/pages.yml/badge.svg?branch=Main)](https://github.com/TheOmegaFett/Tokenomics/actions/workflows/pages.yml)
+[![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)](package.json)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](package.json)
+[![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)](package.json)
 
-## Setup
+**Design, simulate, and stress-test fictional token economies in your browser.** Tokenomics Lab is a local-first sandbox for exploring how issuance, fees, staking, treasury spending, service demand, and validator incentives interact. It uses no wallet, exchange, live chain, or market data.
+
+[**Open the live demo**](https://theomegafett.github.io/Tokenomics/) · [**Browse the source**](https://github.com/TheOmegaFett/Tokenomics)
+
+![Tokenomics Lab simulator showing supply composition, controls, metrics, and economy diagnoses](docs/screenshots/simulator.png)
+
+## Explore the workspaces
+
+| Workspace | What you can do |
+| --- | --- |
+| **Simulator** | Edit parameters, play or step through cycles, inspect charts and diagnoses, and export scenarios or results. |
+| **Compare** | Run up to three scenarios with the same seed and cycle count to see how outcomes diverge. |
+| **Stress Lab** | Schedule shocks and run seeded parameter sweeps in a Web Worker. |
+| **Model Inspector** | Review parameters, formulas, and health-score components. |
+
+| Compare scenarios | Stress-test a parameter sweep |
+| --- | --- |
+| ![Compare workspace with overlaid health scores and outcome cards](docs/screenshots/compare.png) | ![Stress Lab workspace with a shock schedule and completed sweep heatmap](docs/screenshots/stress-lab.png) |
+
+Twelve presets include balanced, fee-funded, inflationary, treasury-depletion, validator-starvation, and congestion scenarios. Scenarios saved in the app stay in your browser's local storage. You can also import or export scenario JSON, export result JSON, and download cycle metrics as CSV.
+
+## Get started
+
+Use Node.js 22.12 or newer. From the repository root:
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite. In another terminal, run the checks:
+Open the local URL printed by Vite. Choose a preset or edit parameters. **Play** advances over time; **Pause**, **Step**, **Reset**, and **Complete** control the run. The speed slider sets the target playback rate in cycles per second. After a complete run, Play or Step starts again at cycle one.
 
-```sh
-npm test
-npm run test:e2e
-npm run build
-```
+| Command | Purpose |
+| --- | --- |
+| `npm test` | Run the deterministic simulation-engine tests. |
+| `npm run test:e2e` | Run browser tests; Playwright starts its own dev server. |
+| `npm audit --audit-level=high` | Check dependencies against published advisories. |
+| `npm run build` | Type-check and build the static site in `dist/`. |
+| `npm run preview` | Preview the production build locally. |
+| `npm run screenshots` | Refresh README screenshots against a running dev server. |
 
-- `npm run dev`: start the Vite development server.
-- `npm test`: run Vitest simulation-engine tests.
-- `npm run test:e2e`: run Playwright browser tests; the test runner starts a dev server if needed. Install Playwright's Chromium browser first with `npx playwright install chromium` if it is not already available.
-- `npm run build`: type-check and build the static app.
+If Chromium is missing, install it with `npx playwright install chromium` before running browser tests or capturing screenshots.
 
-## Using the simulator
+## Model at a glance
 
-Choose a preset or edit parameters, then use **Play** to animate one cycle at a time. **Pause** stops playback, **Step** advances one cycle, **Reset** returns to cycle zero, and **Complete** calculates the full run immediately. The speed slider sets the playback rate in cycles per second. After a complete run, Play or Step starts again from the beginning. Scenarios saved in the app stay in your browser's local storage; scenario and result files can also be exported.
+The simulator models a closed, fictional service economy. Aggregate users hold, spend, stake, become dormant, leave, and re-enter. Providers complete abstract service units. Validators respond to rewards, costs, confidence, and slashing risk. Treasury is a token reserve, not fiat.
 
-## Model Overview
-
-The simulator models a closed fictional service economy. Users hold, spend, stake, become dormant, leave, and re-enter. Providers complete abstract service units. Validators receive protocol rewards and may join or leave according to rewards, operating costs, confidence, and slashing risk. Treasury is a token reserve, not fiat.
-
-The accounting identity enforced after every cycle is:
+Every cycle checks the accounting identities:
 
 ```text
 issuedSupply = liquidActive + liquidDormant + staked + treasury + communityRewardPool
 endingIssuedSupply = startingIssuedSupply + mintedThisCycle - burnedThisCycle
 ```
 
-Utility Purchasing Power is `1 / averageServicePrice`, measured as service units purchasable per token. The Utility Value Index starts near `1.0` and combines purchasing power, service availability, quality, reliability, validator coverage, confidence, liquidity, and volatility. Nominal staking yield is token-denominated; real utility yield adjusts it by purchasing-power change.
+Utility Purchasing Power is service units purchasable per token (`1 / averageServicePrice`). The Utility Value Index combines purchasing power, service availability, quality, reliability, validator coverage, confidence, liquidity, and volatility. Nominal staking yield is token-denominated; real utility yield adjusts it for purchasing-power change. See [`src/simulation/`](src/simulation/) for the pure TypeScript engine, presets, shocks, diagnostics, invariants, metrics, and sweeps.
 
-## Presets
+## Deploy to GitHub Pages
 
-The app includes Balanced Service Economy, Fee-Funded Equilibrium, Inflationary APY Trap, Treasury-Subsidized Launch, Treasury Exhaustion, Validator Starvation, Over-Burn Deflation, Viral Growth Congestion, Whale-Dominated Economy, No-Utility Collapse, Burn-Replacement Economy, and Utility-Growth-Capped Issuance.
+The [GitHub Actions workflow](.github/workflows/pages.yml) runs unit and browser tests, builds the app, and deploys successful pushes to `Main` or `main`. Pull requests run the same checks without deploying. The workflow sets Vite's asset base path from the repository name, so project Pages URLs work without a hard-coded path.
 
-## Structure
+1. Push this repository to GitHub.
+2. In **Settings → Pages → Build and deployment**, set **Source** to **GitHub Actions**.
+3. Open the [Actions tab](https://github.com/TheOmegaFett/Tokenomics/actions) to watch the first deployment. The site will be at [the live demo URL](https://theomegafett.github.io/Tokenomics/).
 
-- `src/simulation/`: pure TypeScript simulation engine, presets, shocks, diagnostics, invariants, metrics, and sweeps.
-- `src/workers/`: Web Worker for long parameter sweeps.
-- `src/workspaces/`: Simulator, Compare, Stress Lab, and Model Inspector.
-- `src/components/`: reusable controls and charts.
-- `src/state/`: localStorage scenario persistence.
+No API keys or external services are needed at runtime. To refresh screenshots, start `npm run dev` in one terminal and run `npm run screenshots` in another; commit the resulting files under `docs/screenshots/`.
 
-## Limitations
+## Scope and license
 
-Participants are aggregate cohorts rather than individual wallets. Token value is only internal service utility. The model is intentionally simplified for experimentation and education, not forecasting or financial advice.
-
-## License
+This is an educational model, not a financial application or a forecast. Participants are aggregate cohorts, and token value represents internal service utility only. Results depend on the model's assumptions and should not be treated as investment guidance.
 
 Licensed under the [MIT License](LICENSE).

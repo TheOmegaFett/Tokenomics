@@ -13,6 +13,9 @@ This project follows Semantic Versioning. Dates use `YYYY-MM-DD`.
 
 ### Added
 
+- README badges, app screenshots, and a reproducible screenshot capture command.
+- GitHub Actions checks and GitHub Pages deployment for the public repository.
+- Dependency audit in CI.
 - MIT license for public reuse.
 - Complete local-first Tokenomics Lab web application with simulator, compare, stress lab, model inspector, worker-backed sweeps, presets, exports, and simulation-engine tests.
 - Repository versioning protocol and local commit-message enforcement.
@@ -20,6 +23,8 @@ This project follows Semantic Versioning. Dates use `YYYY-MM-DD`.
 
 ### Changed
 
+- Documented the project, workspaces, commands, model, and deployment in the README.
+- Updated test tooling and dependency lockfile to resolve reported advisories.
 - Split chart dependencies into a separate build chunk for browser caching.
 - Documented playback controls and standalone test commands.
 - Refined diagnostics so permanently fixed full issuance is not treated as supply-cap exhaustion and stable zero-growth systems are not labeled healthy growth without a positive growth signal.
