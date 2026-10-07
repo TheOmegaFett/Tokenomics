@@ -5,8 +5,13 @@ Tokenomics Lab is a local-first simulation game for designing and stress-testing
 ## Setup
 
 ```sh
-npm install
+npm ci
 npm run dev
+```
+
+Open the local URL printed by Vite. In another terminal, run the checks:
+
+```sh
 npm test
 npm run test:e2e
 npm run build
@@ -14,8 +19,12 @@ npm run build
 
 - `npm run dev`: start the Vite development server.
 - `npm test`: run Vitest simulation-engine tests.
-- `npm run test:e2e`: run a Playwright browser smoke test against a running dev server.
+- `npm run test:e2e`: run Playwright browser tests; the test runner starts a dev server if needed. Install Playwright's Chromium browser first with `npx playwright install chromium` if it is not already available.
 - `npm run build`: type-check and build the static app.
+
+## Using the simulator
+
+Choose a preset or edit parameters, then use **Play** to animate one cycle at a time. **Pause** stops playback, **Step** advances one cycle, **Reset** returns to cycle zero, and **Complete** calculates the full run immediately. The speed slider sets the playback rate in cycles per second. After a complete run, Play or Step starts again from the beginning. Scenarios saved in the app stay in your browser's local storage; scenario and result files can also be exported.
 
 ## Model Overview
 
@@ -45,3 +54,7 @@ The app includes Balanced Service Economy, Fee-Funded Equilibrium, Inflationary 
 ## Limitations
 
 Participants are aggregate cohorts rather than individual wallets. Token value is only internal service utility. The model is intentionally simplified for experimentation and education, not forecasting or financial advice.
+
+## License
+
+Licensed under the [MIT License](LICENSE).

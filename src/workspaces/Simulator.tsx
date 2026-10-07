@@ -1,5 +1,6 @@
 import { Copy, Download, FileDown, FileUp, Pause, Play, RotateCcw, Save, SkipForward, StepForward } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { chartGroups, MetricChart } from '../components/Charts';
 import { ParameterControls, sections } from '../components/Controls';
 import { defaultParams } from '../simulation/defaults';
@@ -15,7 +16,7 @@ interface Props {
   onSave: (scenario: Scenario) => void;
   onDuplicate: (scenario: Scenario) => void;
   result: SimulationResult;
-  setResult: (result: SimulationResult) => void;
+  setResult: Dispatch<SetStateAction<SimulationResult>>;
 }
 
 const fmt = (n: number, digits = 2) => Math.abs(n) >= 1000 ? n.toLocaleString(undefined, { maximumFractionDigits: digits }) : n.toFixed(digits);
@@ -23,13 +24,42 @@ const fmt = (n: number, digits = 2) => Math.abs(n) >= 1000 ? n.toLocaleString(un
 export function Simulator({ scenario, onScenario, onSave, onDuplicate, result, setResult }: Props) {
   const [chart, setChart] = useState<keyof typeof chartGroups>('Supply composition');
   const [percent, setPercent] = useState(false);
-  const [speed, setSpeed] = useState(50);
+  const [speed, setSpeed] = useState(10);
+  const [playing, setPlaying] = useState(false);
+  const playbackRef = useRef({ baseCycle: 0, startedAt: 0 });
   const [range, setRange] = useState<[number, number]>([1, scenario.params.cycles]);
   const fileRef = useRef<HTMLInputElement>(null);
   const latest = result.metrics.at(-1);
   const visible = useMemo(() => result.metrics.filter((m) => m.cycle >= range[0] && m.cycle <= range[1]), [result.metrics, range]);
   const updateParams = (patch: Partial<SimulationParams>) => onScenario({ ...scenario, params: normalizeFeeShares({ ...scenario.params, ...patch }), updatedAt: new Date().toISOString() });
-  const run = (cycles = scenario.params.cycles) => setResult(runSimulation(scenario, cycles));
+  useEffect(() => setPlaying(false), [scenario]);
+  useEffect(() => {
+    if (!playing) return;
+    if (result.failed || result.metrics.length >= scenario.params.cycles) {
+      setPlaying(false);
+      return;
+    }
+    const { baseCycle, startedAt } = playbackRef.current;
+    const nextCycle = result.metrics.length + 1;
+    const dueAt = startedAt + (nextCycle - baseCycle) * 1000 / speed;
+    const timer = window.setTimeout(() => {
+      const elapsedCycles = Math.floor((performance.now() - startedAt) * speed / 1000);
+      const targetCycle = Math.min(scenario.params.cycles, Math.max(nextCycle, baseCycle + elapsedCycles));
+      setResult(runSimulation(scenario, targetCycle));
+    }, Math.max(0, dueAt - performance.now()));
+    return () => window.clearTimeout(timer);
+  }, [playing, result, scenario, setResult, speed]);
+  const play = () => {
+    const restarting = result.failed || result.metrics.length >= scenario.params.cycles;
+    playbackRef.current = { baseCycle: restarting ? 0 : result.metrics.length, startedAt: performance.now() };
+    if (restarting) setResult(runSimulation(scenario, 0));
+    setPlaying(true);
+  };
+  const step = () => {
+    setPlaying(false);
+    const nextCycle = result.failed || result.metrics.length >= scenario.params.cycles ? 1 : result.metrics.length + 1;
+    setResult(runSimulation(scenario, nextCycle));
+  };
   const importScenario = async (file?: File) => {
     if (!file) return;
     const imported = parseScenarioJson(await readFile(file));
@@ -41,13 +71,17 @@ export function Simulator({ scenario, onScenario, onSave, onDuplicate, result, s
       <aside className="panel sidebar">
         <label className="scenario-name"><span>Scenario name</span><input value={scenario.name} onChange={(e) => onScenario({ ...scenario, name: e.target.value })} /></label>
         <div className="runbar">
-          <button onClick={() => run()} title="Run"><Play size={16} />Run</button>
-          <button onClick={() => undefined} title="Pause"><Pause size={16} />Pause</button>
-          <button onClick={() => run(Math.min(scenario.params.cycles, result.metrics.length + 1))} title="Single-cycle step"><StepForward size={16} />Step</button>
-          <button onClick={() => setResult(runSimulation(scenario, 0))} title="Reset"><RotateCcw size={16} />Reset</button>
-          <button onClick={() => run(scenario.params.cycles)} title="Run to completion"><SkipForward size={16} />Complete</button>
+          <button onClick={play} disabled={playing} title="Play simulation"><Play size={16} />Play</button>
+          <button onClick={() => setPlaying(false)} disabled={!playing} title="Pause simulation"><Pause size={16} />Pause</button>
+          <button onClick={step} title="Single-cycle step"><StepForward size={16} />Step</button>
+          <button onClick={() => { setPlaying(false); setResult(runSimulation(scenario, 0)); }} title="Reset"><RotateCcw size={16} />Reset</button>
+          <button onClick={() => { setPlaying(false); setResult(runSimulation(scenario)); }} title="Run to completion"><SkipForward size={16} />Complete</button>
         </div>
-        <label><span>Simulation speed</span><input type="range" min="1" max="100" value={speed} onChange={(e) => setSpeed(Number(e.target.value))} /></label>
+        <output aria-label="Simulation progress">Cycle {result.metrics.length} of {scenario.params.cycles}</output>
+        <label><span>Simulation speed: {speed} cycles per second</span><input type="range" min="1" max="60" value={speed} onChange={(e) => {
+          if (playing) playbackRef.current = { baseCycle: result.metrics.length, startedAt: performance.now() };
+          setSpeed(Number(e.target.value));
+        }} /></label>
         <div className="runbar">
           <button onClick={() => onSave(scenario)}><Save size={16} />Save</button>
           <button onClick={() => onDuplicate(scenario)}><Copy size={16} />Duplicate</button>
